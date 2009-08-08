@@ -1,4 +1,5 @@
-(ns org.rathore.amit.webbing.helper)
+(ns org.rathore.amit.webbing.helper
+  (:use org.rathore.amit.utils.clojure))
 
 (import '(com.sun.grizzly.util.http Cookie)
 	'(org.apache.turbine.util BrowserDetector))
@@ -40,12 +41,10 @@
 (defn browser-version [] (*http-helper* :browser-version))
 (defn operating-system [] (*http-helper* :operating-system))
 
-(defn destructured-hash [attribs]
-  (let [d-pair (fn [attrib]
-		 (list attrib (.replace (name attrib) "-" "_")))]		 
-  (apply hash-map (mapcat d-pair attribs))))
+;(defmacro defwebmethod [method-name params & exprs]
+;  `(defn ~method-name [~(destructured-hash params)]
+;     (do
+;       ~@exprs)))
 
 (defmacro defwebmethod [method-name params & exprs]
-  `(defn ~method-name [~(destructured-hash params)]
-     (do
-       ~@exprs)))
+  `(def-hash-method ~method-name ~params ~@exprs))
