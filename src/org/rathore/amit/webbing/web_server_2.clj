@@ -7,6 +7,7 @@
 (import '(java.net HttpURLConnection))
 (require '(org.danlarkin [json :as json]))
 (use 'org.rathore.amit.webbing.helper)
+(use 'org.rathore.amit.webbing.utils)
 (use 'org.rathore.amit.utils.config)
 (use 'org.rathore.amit.utils.logger)
 (use 'org.rathore.amit.utils.clojure)
@@ -37,9 +38,13 @@
 (defn is-get? [request]
   (= (.toUpperCase (str (.getMethod request))) "GET"))
 
+(defn convert-to-nested-map [singularized]
+  )
+
 (defn params-map-from [request]
-  (let [p-map (into {} (.getParameterMap request))]
-    (singularize-values p-map)))
+  (let [p-map (into {} (.getParameterMap request))
+	singularized (singularize-values p-map)]
+    (convert-to-nested-map singularized)))
 
 (defn is-jsonp? [request]
   ((params-map-from request) "jsonp"))
