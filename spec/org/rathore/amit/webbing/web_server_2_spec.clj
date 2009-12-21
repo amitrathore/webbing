@@ -1,6 +1,6 @@
-(ns furtive-spec
+(ns webbing-spec
  (:use [clojure.test :only [run-tests deftest is]])
- (:use org.rathore.amit.webbing.web-server-2))
+ (:use org.rathore.amit.webbing.utils))
 
 (def params {
 	     "d[general][page_type]" "undefined" , 
@@ -17,16 +17,16 @@
 })
 
 (deftest converting-to-nested-map
-  (let [nested (construct-nested-map params)]
-    (is (map? (nested :d)))
-    (let [d (:d nested)
-	  general (:general d)]
-      (is (= (:client-time general) "1261181538285"))
-      (is (= (:request-url general) "http://trial-hotel.com/home.html"))
-      (is (= (:cid general) "encrypted-consumer-id-1261103840540"))
-      (is (= (:referrer general) ""))
-      (is (= (:merchant-session-id general) "EBCDIC"))
-      (is (= (:timezone-offset general) "480"))
-      (is (= (:merchant-id general) "1c030cab-5cbf-c62c-5a3c-287af5b8822b"))
-      (is (= (:_ nested) "1261181538286"))
-      (is (= (:jsonp nested) "jsonp1261181538202")))))
+  (let [nested (convert-to-nested-map params)]
+    (is (map? (nested "d")))
+    (let [d (nested "d")
+	  general (d "general")]
+      (is (= (general "client-time") "1261181538285"))
+      (is (= (general "request-url") "http://trial-hotel.com/home.html"))
+      (is (= (general "cid") "encrypted-consumer-id-1261103840540"))
+      (is (= (general "referrer") ""))
+      (is (= (general "merchant-session-id") "EBCDIC"))
+      (is (= (general "timezone-offset") "480"))
+      (is (= (general "merchant-id") "1c030cab-5cbf-c62c-5a3c-287af5b8822b"))
+      (is (= (nested "-") "1261181538286"))
+      (is (= (nested "jsonp") "jsonp1261181538202")))))

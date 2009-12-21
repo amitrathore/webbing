@@ -38,9 +38,6 @@
 (defn is-get? [request]
   (= (.toUpperCase (str (.getMethod request))) "GET"))
 
-(defn convert-to-nested-map [singularized]
-  )
-
 (defn params-map-from [request]
   (let [p-map (into {} (.getParameterMap request))
 	singularized (singularize-values p-map)]
