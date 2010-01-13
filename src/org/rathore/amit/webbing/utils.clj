@@ -14,5 +14,7 @@
 
 (defn convert-to-nested-map [singularized]
   (let [converter (fn [container [k v]]
-		    (insert-nested-keys k v container))]
-    (keywordize-keys (reduce converter {} singularized))))
+		    (insert-nested-keys k v container))
+	stringized (reduce converter {} singularized)
+	keywordized (keywordize-keys stringized)]
+    (merge keywordized stringized)))

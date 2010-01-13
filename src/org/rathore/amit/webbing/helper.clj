@@ -41,5 +41,9 @@
 (defn browser-version [] (*http-helper* :browser-version))
 (defn operating-system [] (*http-helper* :operating-system))
 
+;(defmacro defwebmethod [method-name params & exprs]
+;  `(def-hash-method ~method-name ~params ~@exprs))
+
 (defmacro defwebmethod [method-name params & exprs]
-  `(def-hash-method ~method-name ~params ~@exprs))
+  `(defn ~method-name [{:keys ~params}]
+     ~@exprs))
