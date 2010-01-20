@@ -19,23 +19,27 @@
 (defn http-helper [request response]
   (let [browser (browser-detector request)
 	cookies (cookie-hash request)
-	add-cookie (fn [name value]
-		     (.addCookie response (Cookie. name value)))
+	add-cookie (fn [name value age]
+                     (let [cookie (Cookie. name value)]
+                       (.setMaxAge cookie age)
+                       (.setPath cookie "/")
+                       (.addCookie response cookie))
+                     value)
 	read-cookie (fn [name]
 		      (if-not (empty? cookies)
 			      (cookies name)))]
     (fn [command & args]
-      (cond
-	(= command :add-cookie) (apply add-cookie args)
-	(= command :read-cookie) (apply read-cookie args)
-	(= command :ip-address) (.getRemoteAddr request)
-	(= command :browser-name) (if browser (.getBrowserName browser))
-	(= command :browser-version) (if browser (.getBrowserVersion browser))
-	(= command :operating-system) (if browser (.getBrowserPlatform browser))
-	:default (throw (Exception. (str "Response-helper: Unknown command, " command)))))))
+      (condp = command
+	:add-cookie (apply add-cookie args)
+	:read-cookie (apply read-cookie args)
+	:ip-address (.getRemoteAddr request)
+	:browser-name (if browser (.getBrowserName browser))
+	:browser-version (if browser (.getBrowserVersion browser))
+	:operating-system (if browser (.getBrowserPlatform browser))
+	(throw (Exception. (str "Response-helper: Unknown command, " command)))))))
 
 (defn read-cookie [name] (*http-helper* :read-cookie name))
-(defn set-cookie [name value] (*http-helper* :add-cookie name value))
+(defn set-cookie [name value age] (*http-helper* :add-cookie name value age))
 (defn requester-ip [] (*http-helper* :ip-address))
 (defn browser-name [] (*http-helper* :browser-name))
 (defn browser-version [] (*http-helper* :browser-version))
