@@ -50,8 +50,8 @@
   ((params-map-from request) "jsonp"))
 
 (defn only-jsonp-param? [params-map]
-  (and (= 1 (count params-map))
-       (= "jsonp" (first (keys params-map)))))
+  (and (= 2 (count params-map))
+       (= (sort-by str ["jsonp" :jsonp]) (sort-by str (keys params-map)))))
 
 (defn is-restful? [request]
   (let [params-map (params-map-from request)]
@@ -97,7 +97,7 @@
       (if handler
 	(let [params (params-for request handler-functions)
 	      is-restful (is-restful? request)
-	      _ (log-message (str (.getServerName request) ":" (.getServerPort request)) "recieved request for (" requested-route params ")")
+	      _ (log-message (str (.getServerName request) ":" (.getServerPort request)) "recieved " (if (is-jsonp? request) "jsonp" "regular") "request for (" requested-route  (if is-restful "RESTFUL" "QS")  params ")")
 	      response-text (response-from handler params is-restful)]
 	  (.println (.getWriter response) (prepare-response response-text request)))
 	(log-message "Unable to respond to" (.getRequestURI request))))))

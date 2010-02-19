@@ -1,5 +1,6 @@
 (ns org.rathore.amit.webbing.helper
-  (:use org.rathore.amit.utils.clojure))
+  (:use org.rathore.amit.utils.clojure)
+  (:use org.rathore.amit.utils.logger))
 
 (import '(com.sun.grizzly.util.http Cookie)
 	'(org.apache.turbine.util BrowserDetector))
@@ -32,7 +33,10 @@
       (condp = command
 	:add-cookie (apply add-cookie args)
 	:read-cookie (apply read-cookie args)
-	:ip-address (.getRemoteAddr request)
+	:ip-address (do
+                      (log-message "host:" (.getRemoteHost request))
+                      (log-message "ip:" (.getRemoteAddr request))
+                      (.getRemoteAddr request))
 	:browser-name (if browser (.getBrowserName browser))
 	:browser-version (if browser (.getBrowserVersion browser))
 	:operating-system (if browser (.getBrowserPlatform browser))
