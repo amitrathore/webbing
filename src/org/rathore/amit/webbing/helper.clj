@@ -33,10 +33,7 @@
       (condp = command
 	:add-cookie (apply add-cookie args)
 	:read-cookie (apply read-cookie args)
-	:ip-address (do
-                      (log-message "host:" (.getRemoteHost request))
-                      (log-message "ip:" (.getRemoteAddr request))
-                      (.getRemoteAddr request))
+	:ip-address (.getRemoteAddr request)
 	:browser-name (if browser (.getBrowserName browser))
 	:browser-version (if browser (.getBrowserVersion browser))
 	:operating-system (if browser (.getBrowserPlatform browser))

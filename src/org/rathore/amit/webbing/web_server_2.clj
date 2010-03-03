@@ -97,6 +97,7 @@
       (if handler
 	(let [params (params-for request handler-functions)
 	      is-restful (is-restful? request)
+              _ (log-message "-------------------------------------------------------------------------------------------")
 	      _ (log-message (str (.getServerName request) ":" (.getServerPort request)) "recieved " (if (is-jsonp? request) "jsonp" "regular") "request for (" requested-route  (if is-restful "RESTFUL" "QS")  params ")")
 	      response-text (response-from handler params is-restful)]
 	  (.println (.getWriter response) (prepare-response response-text request)))
