@@ -44,14 +44,14 @@
     (convert-to-nested-map singularized)))
 
 (defn is-jsonp? [request]
-  ((params-map-from request) "jsonp"))
+  ((params-map-from request) :jsonp))
 
 (defn jsonp-callback [request]
-  ((params-map-from request) "jsonp"))
+  ((params-map-from request) :jsonp))
 
 (defn only-jsonp-param? [params-map]
-  (and (= 2 (count params-map))
-       (= (sort-by str ["jsonp" :jsonp]) (sort-by str (keys params-map)))))
+  (and (= 1 (count params-map))
+       (= :jsonp (first (keys params-map)))))
 
 (defn is-restful? [request]
   (let [params-map (params-map-from request)]
