@@ -1,5 +1,8 @@
 (ns org.rathore.amit.webbing.utils
-  (:use clojure.walk))
+  (:use clojure.walk
+        org.rathore.amit.utils.clojure))
+
+(def webbing-bindings (ref {}))
 
 (filter (complement empty?) (seq (.split "d[general][client_time]" "[\\[\\]]")))
 
@@ -17,3 +20,25 @@
 		    (insert-nested-keys k v container))
 	stringized (reduce converter {} singularized)]
     (keywordize-keys stringized)))
+
+(defn singularize-values [a-map]
+  (if (empty? a-map)
+    {}
+    (let [kv (fn [e]
+	       {(first e) (aget (last e) 0)})]
+      (apply merge (map kv a-map)))))
+
+(defmacro with-webbing-bindings [body]
+  `(do
+     (push-thread-bindings @webbing-bindings)
+     (try ~body
+     (finally (pop-thread-bindings)))))
+
+(defmacro register-bindings [bindings]
+  `(dosync (ref-set webbing-bindings (hash-map ~@(var-ize bindings)))))
+
+(defmacro binding-for-webbing [bindings & expr]
+  `(do
+     (register-bindings ~bindings)
+     (binding [~@bindings] ~@expr)))
+
