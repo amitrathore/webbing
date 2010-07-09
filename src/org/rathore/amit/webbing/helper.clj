@@ -45,5 +45,6 @@
 ;  `(def-hash-method ~method-name ~params ~@exprs))
 
 (defmacro defwebmethod [method-name params & exprs]
-  `(defn ~method-name [{:keys ~params}]
-     ~@exprs))
+  (if (empty? params)
+    `(defn ~method-name ~params ~@exprs)
+    `(defn ~method-name [{:keys ~params}] ~@exprs)))
