@@ -1,5 +1,6 @@
 (ns org.rathore.amit.webbing.utils
-  (:use clojure.walk))
+  (:use clojure.walk
+        org.rathore.amit.utils.logger))
 
 (filter (complement empty?) (seq (.split "d[general][client_time]" "[\\[\\]]")))
 
@@ -17,3 +18,12 @@
 		    (insert-nested-keys k v container))
 	stringized (reduce converter {} singularized)]
     (keywordize-keys stringized)))
+
+(defn log-queued [gws]
+  (log-message "Number of queued requests:" (.getCountQueued (.getThreadPoolStatistics (.getStatistics gws)))))
+
+(defn periodically-log-queued [gws time-interval-millis]
+  (.startGatheringStatistics (.getStatistics gws))
+  (log-queued gws)
+  (Thread/sleep time-interval-millis)
+  (recur gws time-interval-millis))

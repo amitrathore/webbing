@@ -111,5 +111,6 @@
 (defn boot-web-server [handler-functions-as-route-map port]
   (let [gws (GrizzlyWebServer. port)]
     (.addGrizzlyAdapter gws (grizzly-adapter-for handler-functions-as-route-map))
+    (future (with-webbing-bindings (periodically-log-queued gws 5000)))
     (log-message "Started webbing-http-gateway on port" port)
     (.start gws)))
