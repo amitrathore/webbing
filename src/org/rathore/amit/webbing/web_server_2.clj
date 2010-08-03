@@ -113,6 +113,5 @@
     (.setCoreThreads gws 100)
     (.setMaxThreads gws 100)
     (.addGrizzlyAdapter gws (grizzly-adapter-for handler-functions-as-route-map))
-    (future (with-webbing-bindings (periodically-log-queued gws 5000)))
     (log-message "Started webbing-http-gateway on port" port)
     (.start gws)))
