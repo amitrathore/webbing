@@ -33,10 +33,7 @@
       (condp = command
 	:add-cookie (apply add-cookie args)
 	:read-cookie (apply read-cookie args)
-	:ip-address (do
-                      (log-message "host:" (.getRemoteHost request))
-                      (log-message "ip:" (.getRemoteAddr request))
-                      (.getRemoteAddr request))
+	:ip-address (first (.split (.getHeader request "x-forwarded-for") ","))
 	:browser-name (if browser (.getBrowserName browser))
 	:browser-version (if browser (.getBrowserVersion browser))
 	:operating-system (if browser (.getBrowserPlatform browser))
@@ -48,9 +45,6 @@
 (defn browser-name [] (*http-helper* :browser-name))
 (defn browser-version [] (*http-helper* :browser-version))
 (defn operating-system [] (*http-helper* :operating-system))
-
-;(defmacro defwebmethod [method-name params & exprs]
-;  `(def-hash-method ~method-name ~params ~@exprs))
 
 (defmacro defwebmethod [method-name params & exprs]
   `(defn ~method-name [{:keys ~params}]
