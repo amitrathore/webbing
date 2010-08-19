@@ -89,6 +89,7 @@
     
 (defn service-http-request [handler-functions request response]
   (binding [*http-helper* (http-helper request response)]
+    (.setCharacterEncoding request "UTF-8")
     (let [requested-route (route-for request handler-functions)
           handler (handler-for request handler-functions)]
       (if handler
