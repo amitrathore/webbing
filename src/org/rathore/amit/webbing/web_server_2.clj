@@ -78,12 +78,9 @@
      (params-map-from request)))
     
 (defn response-from [handler params is-restful]
-  (try
-   (if is-restful
-     (apply handler params)
-     (handler params))
-  (catch Exception e
-    (log-exception e))))
+  (if is-restful
+    (apply handler params)
+    (handler params)))
 
 (defn prepare-response [response-text request]
   (if (is-jsonp? request)
@@ -93,14 +90,16 @@
 (defn service-http-request [handler-functions request response]
   (binding [*http-helper* (http-helper request response)]
     (let [requested-route (route-for request handler-functions)
-	  handler (handler-for request handler-functions)]
+          handler (handler-for request handler-functions)]
       (if handler
-	(let [params (params-for request handler-functions)
-	      is-restful (is-restful? request)
-	      _ (log-message (str (.getServerName request) ":" (.getServerPort request)) "recieved " (if (is-jsonp? request) "jsonp" "regular") "request for (" requested-route  (if is-restful "RESTFUL" "QS")  params ")")
-	      response-text (response-from handler params is-restful)]
-	  (.println (.getWriter response) (prepare-response response-text request)))
-	(log-message "Unable to respond to" (.getRequestURI request))))))
+        (let [params (params-for request handler-functions)
+              is-restful (is-restful? request)
+              _ (log-message (str (.getServerName request) ":" (.getServerPort request)) "recieved " (if (is-jsonp? request) "jsonp" "regular") "request for (" requested-route  (if is-restful "RESTFUL" "QS")  params ")")]
+          (try
+           (.println (.getWriter response) (prepare-response (response-from handler params is-restful) request))
+           (catch Exception e
+             (log-exception e (str "Webbing failed processing " requested-route " with arguments:" params)))))
+        (log-message "Unable to respond to" (.getRequestURI request))))))
 
 (defn grizzly-adapter-for [handler-functions-as-route-map]
   (proxy [GrizzlyAdapter] []
