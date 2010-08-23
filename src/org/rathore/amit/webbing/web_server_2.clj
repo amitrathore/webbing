@@ -11,6 +11,7 @@
 (use 'org.rathore.amit.utils.config)
 (use 'org.rathore.amit.utils.logger)
 (use 'org.rathore.amit.utils.clojure)
+(use 'alex-and-georges.debug-repl)
 
 (def webbing-bindings (ref {}))
 
@@ -94,8 +95,10 @@
           handler (handler-for request handler-functions)]
       (if handler
         (let [params (params-for request handler-functions)
-              is-restful (is-restful? request)
-              _ (log-message (str (.getServerName request) ":" (.getServerPort request)) "recieved " (if (is-jsonp? request) "jsonp" "regular") "request for (" requested-route  (if is-restful "RESTFUL" "QS")  params ")")]
+              is-restful (is-restful? request)]
+          (log-message (str (.getServerName request) ":" (.getServerPort request)) "recieved " 
+                          (if (is-jsonp? request) "jsonp" "regular") 
+                              "request for (" requested-route  (if is-restful "RESTFUL" "QS")  params ")")
           (try
            (.println (.getWriter response) (prepare-response (response-from handler params is-restful) request))
            (catch Exception e
