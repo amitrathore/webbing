@@ -15,6 +15,8 @@
 
 (def webbing-bindings (ref {}))
 
+(def BLANK "")
+
 (defmacro with-webbing-bindings [body]
   `(do
      (push-thread-bindings @webbing-bindings)
@@ -100,7 +102,7 @@
                           (if (is-jsonp? request) "jsonp" "regular") 
                               "request for (" requested-route  (if is-restful "RESTFUL" "QS")  params ")")
           (try
-           (.println (.getWriter response) (prepare-response (response-from handler params is-restful) request))
+           (.println (.getWriter response) (or (prepare-response (response-from handler params is-restful) request) BLANK))
            (catch Exception e
              (log-exception e (str "Webbing failed processing " requested-route " with arguments:" params)))))
         (log-message "Unable to respond to" (.getRequestURI request))))))
