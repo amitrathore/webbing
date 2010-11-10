@@ -18,8 +18,7 @@
 
 (defn browser-detector [request]
   (let [user-agent (.getHeader request "user-agent")]
-    (if-not (empty? user-agent)
-      (UserAgent/parseUserAgentString user-agent))))
+      (UserAgent/parseUserAgentString user-agent)))
 
 (defn http-helper [request response]
   (let [user-agent (browser-detector request)
