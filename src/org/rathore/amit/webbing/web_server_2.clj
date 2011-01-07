@@ -58,7 +58,7 @@
 
 (defn is-restful? [request]
   (let [params-map (params-map-from request)]
-    (or (empty? params-map) 
+    (or (empty? params-map)
 	(only-jsonp-param? params-map))))
 
 (defn route-for [request handlers]
@@ -79,7 +79,7 @@
    (if (is-restful? request)
      (parsed-params-from-uri request handlers)
      (params-map-from request)))
-    
+
 (defn response-from [handler params is-restful]
   (if is-restful
     (apply handler params)
@@ -89,7 +89,13 @@
   (if (is-jsonp? request)
     (str (jsonp-callback request)  "(" (json/encode-to-str response-text) ")")
     response-text))
-    
+
+(defn reply [servlet-response status content]
+  (.setStatus servlet-response status)
+  (.println
+    (.getWriter servlet-response)
+    (or content BLANK)))
+
 (defn service-http-request [handler-functions request response]
   (binding [*http-helper* (http-helper request response)]
     (.setCharacterEncoding request "UTF-8")
@@ -100,20 +106,24 @@
       (if handler
         (let [params (params-for request handler-functions)
               is-restful (is-restful? request)]
-          (log-message (str (.getServerName request) ":" (.getServerPort request)) "recieved " 
-                          (if (is-jsonp? request) "jsonp" "regular") 
+          (log-message (str (.getServerName request) ":" (.getServerPort request)) "recieved "
+                          (if (is-jsonp? request) "jsonp" "regular")
                               "request for (" requested-route  (if is-restful "RESTFUL" "QS")  params ")")
           (try
-           (.println (.getWriter response) (or (prepare-response (response-from handler params is-restful) request) BLANK))
+	    (reply response 200 (prepare-response (response-from handler params is-restful) request))
            (catch Exception e
              (log-exception e (str "Webbing failed processing " requested-route " with arguments:" params)))))
-        (log-message "Unable to respond to" (.getRequestURI request))))))
+        (do
+	  (let [uri (.getRequestURI request)
+		msg (str "Unable to respond to" uri)]
+	    (log-message msg)
+	    (reply response 404 msg)))))))
 
 (defn grizzly-adapter-for [handler-functions-as-route-map]
   (proxy [GrizzlyAdapter] []
     (service [req res]
-      (with-webbing-bindings 
-        (service-http-request handler-functions-as-route-map req res)))))
+      (with-webbing-bindings
+	(service-http-request handler-functions-as-route-map req res)))))
 
 (defn boot-web-server [handler-functions-as-route-map port]
   (let [gws (GrizzlyWebServer. port)]
