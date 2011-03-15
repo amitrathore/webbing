@@ -11,6 +11,7 @@
 (use 'org.rathore.amit.utils.config)
 (use 'org.rathore.amit.utils.logger)
 (use 'org.rathore.amit.utils.clojure)
+(use 'org.rathore.amit.webbing.formats)
 (use 'alex-and-georges.debug-repl)
 
 (def webbing-bindings (ref {}))
@@ -41,10 +42,16 @@
 (defn is-get? [request]
   (= (.toUpperCase (str (.getMethod request))) "GET"))
 
+(defn is-post? [request]
+  (= (.toUpperCase (str (.getMethod request))) "POST"))
+
 (defn params-map-from [request]
   (let [p-map (into {} (.getParameterMap request))
-	singularized (singularize-values p-map)]
-    (convert-to-nested-map singularized)))
+	singularized (singularize-values p-map)
+	p-map (convert-to-nested-map singularized)]
+    (if (is-post? request)
+      (merge p-map (post-parameters request))
+      p-map)))
 
 (defn is-jsonp? [request]
   ((params-map-from request) :jsonp))
