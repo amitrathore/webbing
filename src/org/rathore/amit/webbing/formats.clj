@@ -57,7 +57,6 @@
 				     escaped-characters)
 				   "utf-8"))
 			       (vals parameter-map)))]
-    (log-message (pr-str decoded-parameters))
     decoded-parameters))
 
 (defn post-parameters [^GrizzlyRequest request]
