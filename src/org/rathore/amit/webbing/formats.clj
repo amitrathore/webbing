@@ -42,6 +42,8 @@
    "%AE" "%A8"})
 
 (defn body-parameters [^ByteBuffer buf]
+  (log-message (pr-str (vec (repeatedly (.remaining buf) #(.get buf)))))
+  (.rewind buf)
   (let [body (-> buf byte-buffer->string)
 	split-params (when-not (empty? body) (seq (.split ^String body "[&=]")))
 	parameter-map (apply hash-map split-params)
