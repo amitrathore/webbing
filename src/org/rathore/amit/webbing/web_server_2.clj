@@ -18,6 +18,8 @@
 
 (def BLANK "")
 
+(def param-map nil)
+
 (defmacro with-webbing-bindings [body]
   `(do
      (push-thread-bindings @webbing-bindings)
@@ -46,12 +48,15 @@
   (= (.toUpperCase (str (.getMethod request))) "POST"))
 
 (defn params-map-from [request]
-  (let [p-map (into {} (.getParameterMap request))
-	singularized (singularize-values p-map)
-	p-map (convert-to-nested-map singularized)]
-    (if (is-post? request)
-      (merge p-map (post-parameters request))
-      p-map)))
+  (if @param-map
+    @param-map
+    (let [escaped-parameters (when (is-post? request) (post-parameters request))
+	 p-map (into {} (.getParameterMap request))
+	 singularized (singularize-values p-map)
+	 p-map (convert-to-nested-map singularized)]
+     (let [result (merge p-map escaped-parameters)]
+       (reset! param-map result)
+       result))))
 
 (defn is-jsonp? [request]
   ((params-map-from request) :jsonp))
@@ -104,7 +109,8 @@
     (or content BLANK)))
 
 (defn service-http-request [handler-functions request response]
-  (binding [*http-helper* (http-helper request response)]
+  (binding [*http-helper* (http-helper request response)
+	    param-map (atom nil)]
     (.setCharacterEncoding request "UTF-8")
     (.setCharacterEncoding response "UTF-8")
     (.setContentType response "text/html;charset=UTF-8")

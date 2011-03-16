@@ -1,4 +1,6 @@
 (ns org.rathore.amit.webbing.formats
+  (:use
+    org.rathore.amit.utils.logger)
   (:import
     [com.sun.grizzly.tcp.http11 GrizzlyRequest]
     [java.io InputStream]
@@ -6,8 +8,9 @@
 
 (defn concat-byte-buffers [& bufs]
   (if (= 1 (count bufs))
-    (first bufs)
-    (let [size (apply + (map #(.remaining ^ByteBuffer %) bufs))
+    (.rewind ^ByteBuffer (first bufs))
+    (let [bufs (map #(.rewind ^ByteBuffer %) bufs)
+	  size (apply + (map #(.remaining ^ByteBuffer %) bufs))
 	  buf (ByteBuffer/allocate size)]
       (doseq [b bufs]
 	(.put buf b))
@@ -15,16 +18,17 @@
 
 (defn input-stream->byte-buffer
   [^InputStream stream]
-  (when stream
-    (let [available (.available stream)]
-      (loop [ary ^bytes (byte-array (if (pos? available) available 1024)), offset 0, bufs []]
-	(let [ary-len (count ary)]
-	  (if (= ary-len offset)
-	    (recur (byte-array 1024) 0 (conj bufs (ByteBuffer/wrap ary)))
-	    (let [byte-count (.read stream ary offset (- ary-len offset))]
-	      (if (neg? byte-count)
-		(apply concat-byte-buffers (conj bufs (ByteBuffer/wrap ary 0 offset)))
-		(recur ary (+ offset byte-count) bufs)))))))))
+  (let [available (.available stream)]
+    (println "*** available" available)
+    (loop [ary ^bytes (byte-array (if (pos? available) available 1024)), offset 0, bufs []]
+      (let [ary-len (count ary)]
+	(if (= ary-len offset)
+	  (recur (byte-array 1024) 0 (conj bufs (ByteBuffer/wrap ary)))
+	  (let [byte-count (.read stream ary offset (- ary-len offset))]
+	    (println "*** read" byte-count "bytes!")
+	    (if (neg? byte-count)
+	      (apply concat-byte-buffers (conj bufs (ByteBuffer/wrap ary 0 offset)))
+	      (recur ary (+ offset byte-count) bufs))))))))
 
 (defn byte-buffer->string
   ([buf]
@@ -37,9 +41,10 @@
 
 (def escaped-characters
   {"%99" "\u2122"
-   "%AE" "\u00AE"})
+   "%AE" "%A8"})
 
 (defn body-parameters [^ByteBuffer buf]
+  (println "*** buf" buf)
   (let [body (-> buf byte-buffer->string)
 	split-params (when-not (empty? body) (seq (.split ^String body "[&=]")))
 	parameter-map (apply hash-map split-params)]
@@ -57,4 +62,5 @@
 	(vals parameter-map)))))
 
 (defn post-parameters [^GrizzlyRequest request]
+  (.printStackTrace (Throwable.))
   (-> request .getInputStream input-stream->byte-buffer body-parameters))
