@@ -19,13 +19,11 @@
 (defn input-stream->byte-buffer
   [^InputStream stream]
   (let [available (.available stream)]
-    (println "*** available" available)
     (loop [ary ^bytes (byte-array (if (pos? available) available 1024)), offset 0, bufs []]
       (let [ary-len (count ary)]
 	(if (= ary-len offset)
 	  (recur (byte-array 1024) 0 (conj bufs (ByteBuffer/wrap ary)))
 	  (let [byte-count (.read stream ary offset (- ary-len offset))]
-	    (println "*** read" byte-count "bytes!")
 	    (if (neg? byte-count)
 	      (apply concat-byte-buffers (conj bufs (ByteBuffer/wrap ary 0 offset)))
 	      (recur ary (+ offset byte-count) bufs))))))))
@@ -44,23 +42,23 @@
    "%AE" "%A8"})
 
 (defn body-parameters [^ByteBuffer buf]
-  (println "*** buf" buf)
   (let [body (-> buf byte-buffer->string)
 	split-params (when-not (empty? body) (seq (.split ^String body "[&=]")))
-	parameter-map (apply hash-map split-params)]
-    (zipmap
-      (map keyword (keys parameter-map))
-      (map
-	(fn [value]
-	  (java.net.URLDecoder/decode
-	    (reduce
-	      (fn [value [from to]]
-		(.replace value from to))
-	      value
-	      escaped-characters)
-	    "utf-8"))
-	(vals parameter-map)))))
+	parameter-map (apply hash-map split-params)
+	decoded-parameters (zipmap
+			     (map keyword (keys parameter-map))
+			     (map
+			       (fn [value]
+				 (java.net.URLDecoder/decode
+				   (reduce
+				     (fn [value [from to]]
+				       (.replace value from to))
+				     value
+				     escaped-characters)
+				   "utf-8"))
+			       (vals parameter-map)))]
+    (log-message (pr-str decoded-parameters))
+    decoded-parameters))
 
 (defn post-parameters [^GrizzlyRequest request]
-  (.printStackTrace (Throwable.))
   (-> request .getInputStream input-stream->byte-buffer body-parameters))
