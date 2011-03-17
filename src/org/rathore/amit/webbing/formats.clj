@@ -46,7 +46,7 @@
 	split-params (when-not (empty? body) (seq (.split ^String body "[&=]")))
 	parameter-map (apply hash-map split-params)
 	decoded-parameters (zipmap
-			     (map keyword (keys parameter-map))
+			     (map #(keyword (.replace ^String % "_" "-")) (keys parameter-map))
 			     (map
 			       (fn [value]
 				 (java.net.URLDecoder/decode
