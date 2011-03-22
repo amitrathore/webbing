@@ -36,6 +36,7 @@
     (fn [command & args]
       (condp = command
 	:add-cookie (apply add-cookie args)
+  :add-header (.addHeader response (first args) (last args))
 	:read-cookie (apply read-cookie args)
 	:ip-address (first (.split (.getHeader request "x-forwarded-for") ","))
 	:browser-name (if user-agent (.getName (.getBrowser user-agent)))
@@ -45,6 +46,7 @@
 
 (defn read-cookie [name] (*http-helper* :read-cookie name))
 (defn set-cookie [name value age] (*http-helper* :add-cookie name value age))
+(defn set-header [name value] (*http-helper* :add-header name value))
 (defn requester-ip [] (*http-helper* :ip-address))
 (defn browser-name [] (*http-helper* :browser-name))
 (defn browser-version [] (*http-helper* :browser-version))
